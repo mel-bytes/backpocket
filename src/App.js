@@ -1,28 +1,55 @@
 import { useState } from 'react';
 import './App.css';
 
+const STREAMING_LOGOS = {
+  'Netflix': '🔴',
+  'Amazon Prime Video': '🔵',
+  'Disney Plus': '🔷',
+  'Hulu': '🟢',
+  'Apple TV Plus': '⬛',
+  'HBO Max': '🟣',
+  'Paramount Plus': '🔵',
+};
+
 function App() {
   // useState is how React remembers things - like variables that update the screen
   const [query, setQuery] = useState('');        // what the user types
   const [results, setResults] = useState([]);    // movies we get back from TMDB
   const [loading, setLoading] = useState(false); // show loading spinner?
   const [watchlist, setWatchlist] = useState([]); // saved titles
+  const [providers, setProviders] = useState({}); // streaming availability
 
   // This function runs when the user searches
   const searchMovies = async () => {
-    if (query.length < 3) return; // edge case: don't search if less than 3 chars
+    if (query.length < 3) return;
     setLoading(true);
 
     const response = await fetch(
       `https://api.themoviedb.org/3/search/multi?query=${query}&language=en-US&page=1`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.REACT_APP_TMDB_TOKEN}`,
-        },
-      }
+      { headers: { Authorization: `Bearer ${process.env.REACT_APP_TMDB_TOKEN}` } }
     );
     const data = await response.json();
-    setResults(data.results || []);
+    const filteredResults = (data.results || []).filter(
+      item => item.media_type === 'movie' || item.media_type === 'tv'
+    );
+    setResults(filteredResults);
+
+    // Fetch streaming providers for each result
+    const providerMap = {};
+    await Promise.all(
+      filteredResults.slice(0, 8).map(async (item) => {
+        const type = item.media_type === 'movie' ? 'movie' : 'tv';
+        const res = await fetch(
+          `https://api.themoviedb.org/3/${type}/${item.id}/watch/providers`,
+          { headers: { Authorization: `Bearer ${process.env.REACT_APP_TMDB_TOKEN}` } }
+        );
+        const provData = await res.json();
+        // Get US providers - flatrate means subscription streaming
+        const usProviders = provData.results?.US?.flatrate || [];
+        providerMap[item.id] = usProviders;
+      })
+    );
+    setProviders(providerMap);
     setLoading(false);
   };
 
@@ -79,6 +106,18 @@ function App() {
               <div className="card-info">
                 <h3>{item.title || item.name}</h3>
                 <p>{item.overview?.slice(0, 100)}...</p>
+                {/* Streaming Availability */}
+                <div className="providers">
+                  {providers[item.id]?.length > 0 ? (
+                    providers[item.id].map(p => (
+                      <span key={p.provider_id} className="provider-badge" title={p.provider_name}>
+                        {STREAMING_LOGOS[p.provider_name] || '📺'} {p.provider_name}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="no-providers">Not streaming in US</span>
+                  )}
+                </div>
                 <button onClick={() => addToWatchlist(item)} className="pocket-btn">
                   + Add to BackPocket
                 </button>
