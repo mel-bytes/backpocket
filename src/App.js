@@ -12,20 +12,82 @@ const STREAMING_LOGOS = {
 };
 
 function App() {
-  // useState is how React remembers things - like variables that update the screen
-  const [query, setQuery] = useState('');        // what the user types
-  const [results, setResults] = useState([]);    // movies we get back from TMDB
-  const [loading, setLoading] = useState(false); // show loading spinner?
-  const [watchlist, setWatchlist] = useState([]); // saved titles
-  const [providers, setProviders] = useState({}); // streaming availability
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [watchlist, setWatchlist] = useState([]);
+  const [providers, setProviders] = useState({});
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [detecting, setDetecting] = useState(false);
+  const [detectedTitle, setDetectedTitle] = useState('');
 
-  // This function runs when the user searches
-  const searchMovies = async () => {
-    if (query.length < 3) return;
+  // Extract YouTube video ID from URL
+const extractVideoId = (url) => {
+  const match = url.match(/shorts\/([a-zA-Z0-9_-]+)|v=([a-zA-Z0-9_-]+)|youtu\.be\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] || match[2] || match[3] : null;
+};
+
+  // Fetch video data from YouTube API
+  const detectFromYoutube = async () => {
+    if (!youtubeUrl) return;
+    setDetecting(true);
+    setDetectedTitle('');
+
+    const videoId = extractVideoId(youtubeUrl);
+    console.log('Video ID:', videoId);
+    if (!videoId) {
+      alert('Please paste a valid YouTube URL!');
+      setDetecting(false);
+      return;
+    }
+
+    // Get video details from YouTube
+    const ytResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${process.env.REACT_APP_YOUTUBE_KEY}`
+    );
+    const ytData = await ytResponse.json();
+
+    if (!ytData.items || ytData.items.length === 0) {
+      alert('Could not find this video!');
+      setDetecting(false);
+      return;
+    }
+
+    const video = ytData.items[0].snippet;
+    const videoInfo = `
+      Title: ${video.title}
+      Description: ${video.description?.slice(0, 500)}
+      Tags: ${video.tags?.join(', ') || 'none'}
+    `;
+
+    // Send to our backend server which calls Claude
+const aiResponse = await fetch('http://localhost:3001/detect', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ videoInfo })
+});
+
+const aiData = await aiResponse.json();
+const detected = aiData.title.trim();
+
+    if (detected === 'NONE') {
+      alert('Could not detect a movie or show from this video. Try another!');
+      setDetecting(false);
+      return;
+    }
+
+    setDetectedTitle(detected);
+    setQuery(detected);
+    // Auto search for the detected title
+    await searchMoviesWithQuery(detected);
+    setDetecting(false);
+  };
+
+  // Search with a specific query (used by AI detection)
+  const searchMoviesWithQuery = async (searchQuery) => {
     setLoading(true);
-
     const response = await fetch(
-      `https://api.themoviedb.org/3/search/multi?query=${query}&language=en-US&page=1`,
+      `https://api.themoviedb.org/3/search/multi?query=${searchQuery}&language=en-US&page=1`,
       { headers: { Authorization: `Bearer ${process.env.REACT_APP_TMDB_TOKEN}` } }
     );
     const data = await response.json();
@@ -34,7 +96,6 @@ function App() {
     );
     setResults(filteredResults);
 
-    // Fetch streaming providers for each result
     const providerMap = {};
     await Promise.all(
       filteredResults.slice(0, 8).map(async (item) => {
@@ -44,7 +105,6 @@ function App() {
           { headers: { Authorization: `Bearer ${process.env.REACT_APP_TMDB_TOKEN}` } }
         );
         const provData = await res.json();
-        // Get US providers - flatrate means subscription streaming
         const usProviders = provData.results?.US?.flatrate || [];
         providerMap[item.id] = usProviders;
       })
@@ -53,9 +113,12 @@ function App() {
     setLoading(false);
   };
 
-  // This function saves a title to the watchlist
+  const searchMovies = async () => {
+    if (query.length < 3) return;
+    await searchMoviesWithQuery(query);
+  };
+
   const addToWatchlist = (title) => {
-    // edge case: don't add duplicates
     if (watchlist.find(item => item.id === title.id)) {
       alert('Already in your BackPocket!');
       return;
@@ -71,7 +134,7 @@ function App() {
         <p>See it. Pocket it. Watch it.</p>
       </header>
 
-      {/* Search Section */}
+      {/* Manual Search Section */}
       <div className="search-section">
         <input
           type="text"
@@ -85,6 +148,32 @@ function App() {
           Search
         </button>
       </div>
+
+      {/* Divider */}
+      <div className="divider">
+        <span>or detect from YouTube</span>
+      </div>
+
+      {/* YouTube Detection Section */}
+      <div className="youtube-section">
+        <input
+          type="text"
+          placeholder="Paste a YouTube Shorts URL..."
+          value={youtubeUrl}
+          onChange={(e) => setYoutubeUrl(e.target.value)}
+          className="search-input"
+        />
+        <button onClick={detectFromYoutube} className="youtube-btn" disabled={detecting}>
+          {detecting ? 'Detecting...' : '🎬 Detect'}
+        </button>
+      </div>
+
+      {/* Detected title notification */}
+      {detectedTitle && (
+        <p className="detected-title">
+          🤖 AI detected: <strong>"{detectedTitle}"</strong>
+        </p>
+      )}
 
       {/* Loading */}
       {loading && <p className="loading">Searching...</p>}
@@ -106,7 +195,6 @@ function App() {
               <div className="card-info">
                 <h3>{item.title || item.name}</h3>
                 <p>{item.overview?.slice(0, 100)}...</p>
-                {/* Streaming Availability */}
                 <div className="providers">
                   {providers[item.id]?.length > 0 ? (
                     providers[item.id].map(p => (

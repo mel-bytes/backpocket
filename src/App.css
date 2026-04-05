@@ -199,3 +199,61 @@ body {
 .watch-link:hover {
   text-decoration: underline;
 }
+/* Divider */
+.divider {
+  text-align: center;
+  color: #555;
+  margin: 20px auto;
+  max-width: 600px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #333;
+}
+
+/* YouTube Section */
+.youtube-section {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.youtube-btn {
+  padding: 14px 28px;
+  background: #ff0000;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.youtube-btn:hover {
+  background: #cc0000;
+}
+
+.youtube-btn:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+/* Detected title */
+.detected-title {
+  text-align: center;
+  color: #aaa;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+}
