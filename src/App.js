@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 
 const STREAMING_LOGOS = {
@@ -11,6 +11,16 @@ const STREAMING_LOGOS = {
   'Paramount Plus': '🔵',
 };
 
+const STREAMING_LINKS = {
+  'Netflix': (title) => `https://www.netflix.com/search?q=${encodeURIComponent(title)}`,
+  'Amazon Prime Video': (title) => `https://www.amazon.com/s?k=${encodeURIComponent(title)}&i=instant-video`,
+  'Disney Plus': (title) => `https://www.disneyplus.com/search/${encodeURIComponent(title)}`,
+  'Hulu': (title) => `https://www.hulu.com/search?q=${encodeURIComponent(title)}`,
+  'Apple TV Plus': (title) => `https://tv.apple.com/search?term=${encodeURIComponent(title)}`,
+  'HBO Max': (title) => `https://play.max.com/search?q=${encodeURIComponent(title)}`,
+  'Paramount Plus': (title) => `https://www.paramountplus.com/search/${encodeURIComponent(title)}/`,
+};
+
 function App() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
@@ -20,14 +30,24 @@ function App() {
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [detecting, setDetecting] = useState(false);
   const [detectedTitle, setDetectedTitle] = useState('');
+  const [userCountry, setUserCountry] = useState('US');
+  const [countryName, setCountryName] = useState('United States');
 
-  // Extract YouTube video ID from URL
-const extractVideoId = (url) => {
-  const match = url.match(/shorts\/([a-zA-Z0-9_-]+)|v=([a-zA-Z0-9_-]+)|youtu\.be\/([a-zA-Z0-9_-]+)/);
-  return match ? match[1] || match[2] || match[3] : null;
-};
+  useEffect(() => {
+    fetch('https://ipapi.co/json/')
+      .then(res => res.json())
+      .then(data => {
+        setUserCountry(data.country_code);
+        setCountryName(data.country_name);
+      })
+      .catch(() => console.log('Could not detect country'));
+  }, []);
 
-  // Fetch video data from YouTube API
+  const extractVideoId = (url) => {
+    const match = url.match(/shorts\/([a-zA-Z0-9_-]+)|v=([a-zA-Z0-9_-]+)|youtu\.be\/([a-zA-Z0-9_-]+)/);
+    return match ? match[1] || match[2] || match[3] : null;
+  };
+
   const detectFromYoutube = async () => {
     if (!youtubeUrl) return;
     setDetecting(true);
@@ -35,17 +55,27 @@ const extractVideoId = (url) => {
 
     const videoId = extractVideoId(youtubeUrl);
     console.log('Video ID:', videoId);
+
     if (!videoId) {
       alert('Please paste a valid YouTube URL!');
       setDetecting(false);
       return;
     }
 
-    // Get video details from YouTube
-    const ytResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${process.env.REACT_APP_YOUTUBE_KEY}`
-    );
-    const ytData = await ytResponse.json();
+    const [ytResponse, commentsResponse] = await Promise.all([
+  fetch(`https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${process.env.REACT_APP_YOUTUBE_KEY}`),
+  fetch(`https://www.googleapis.com/youtube/v3/commentThreads?videoId=${videoId}&part=snippet&maxResults=20&key=${process.env.REACT_APP_YOUTUBE_KEY}`)
+]);
+
+const ytData = await ytResponse.json();
+if (!ytData.items || ytData.items.length === 0) {
+  alert('Could not find this video!');
+  setDetecting(false);
+  return;
+}
+const video = ytData.items[0].snippet;
+const commentsData = await commentsResponse.json();
+const topComments = commentsData.items?.map(c => c.snippet.topLevelComment.snippet.textDisplay).join('\n') || 'none';
 
     if (!ytData.items || ytData.items.length === 0) {
       alert('Could not find this video!');
@@ -53,22 +83,21 @@ const extractVideoId = (url) => {
       return;
     }
 
-    const video = ytData.items[0].snippet;
     const videoInfo = `
-      Title: ${video.title}
-      Description: ${video.description?.slice(0, 500)}
-      Tags: ${video.tags?.join(', ') || 'none'}
-    `;
+  Title: ${video.title}
+  Description: ${video.description?.slice(0, 500)}
+  Tags: ${video.tags?.join(', ') || 'none'}
+  Top Comments: ${topComments}
+`;
 
-    // Send to our backend server which calls Claude
-const aiResponse = await fetch('http://localhost:3001/detect', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ videoInfo })
-});
+    const aiResponse = await fetch('http://localhost:3001/detect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ videoInfo })
+    });
 
-const aiData = await aiResponse.json();
-const detected = aiData.title.trim();
+    const aiData = await aiResponse.json();
+    const detected = aiData.title.trim();
 
     if (detected === 'NONE') {
       alert('Could not detect a movie or show from this video. Try another!');
@@ -78,12 +107,10 @@ const detected = aiData.title.trim();
 
     setDetectedTitle(detected);
     setQuery(detected);
-    // Auto search for the detected title
     await searchMoviesWithQuery(detected);
     setDetecting(false);
   };
 
-  // Search with a specific query (used by AI detection)
   const searchMoviesWithQuery = async (searchQuery) => {
     setLoading(true);
     const response = await fetch(
@@ -105,8 +132,8 @@ const detected = aiData.title.trim();
           { headers: { Authorization: `Bearer ${process.env.REACT_APP_TMDB_TOKEN}` } }
         );
         const provData = await res.json();
-        const usProviders = provData.results?.US?.flatrate || [];
-        providerMap[item.id] = usProviders;
+        const countryProviders = provData.results?.[userCountry]?.flatrate || [];
+        providerMap[item.id] = countryProviders;
       })
     );
     setProviders(providerMap);
@@ -123,18 +150,22 @@ const detected = aiData.title.trim();
       alert('Already in your BackPocket!');
       return;
     }
-    setWatchlist([...watchlist, title]);
+    console.log('Providers:', providers[title.id]);
+    const titleWithProviders = {
+      ...title,
+      savedProviders: providers[title.id] || []
+    };
+    setWatchlist([...watchlist, titleWithProviders]);
   };
 
   return (
     <div className="app">
-      {/* Header */}
       <header className="header">
         <h1>🍿 BackPocket</h1>
         <p>See it. Pocket it. Watch it.</p>
+        {countryName && <p className="country-tag">🌍 Showing results for: {countryName}</p>}
       </header>
 
-      {/* Manual Search Section */}
       <div className="search-section">
         <input
           type="text"
@@ -144,17 +175,11 @@ const detected = aiData.title.trim();
           onKeyDown={(e) => e.key === 'Enter' && searchMovies()}
           className="search-input"
         />
-        <button onClick={searchMovies} className="search-btn">
-          Search
-        </button>
+        <button onClick={searchMovies} className="search-btn">Search</button>
       </div>
 
-      {/* Divider */}
-      <div className="divider">
-        <span>or detect from YouTube</span>
-      </div>
+      <div className="divider"><span>or detect from YouTube</span></div>
 
-      {/* YouTube Detection Section */}
       <div className="youtube-section">
         <input
           type="text"
@@ -168,17 +193,14 @@ const detected = aiData.title.trim();
         </button>
       </div>
 
-      {/* Detected title notification */}
       {detectedTitle && (
         <p className="detected-title">
           🤖 AI detected: <strong>"{detectedTitle}"</strong>
         </p>
       )}
 
-      {/* Loading */}
       {loading && <p className="loading">Searching...</p>}
 
-      {/* Results */}
       <div className="results-grid">
         {results
           .filter(item => item.media_type === 'movie' || item.media_type === 'tv')
@@ -198,12 +220,12 @@ const detected = aiData.title.trim();
                 <div className="providers">
                   {providers[item.id]?.length > 0 ? (
                     providers[item.id].map(p => (
-                      <span key={p.provider_id} className="provider-badge" title={p.provider_name}>
+                      <span key={p.provider_id} className="provider-badge">
                         {STREAMING_LOGOS[p.provider_name] || '📺'} {p.provider_name}
                       </span>
                     ))
                   ) : (
-                    <span className="no-providers">Not streaming in US</span>
+                    <span className="no-providers">Not streaming in {countryName}</span>
                   )}
                 </div>
                 <button onClick={() => addToWatchlist(item)} className="pocket-btn">
@@ -214,26 +236,40 @@ const detected = aiData.title.trim();
           ))}
       </div>
 
-      {/* Empty state */}
       {results.length === 0 && !loading && query && (
         <p className="empty">No results found for "{query}" — try another title!</p>
       )}
 
-      {/* Watchlist */}
       {watchlist.length > 0 && (
         <div className="watchlist">
           <h2>🎬 My BackPocket</h2>
           {watchlist.map(item => (
             <div key={item.id} className="watchlist-item">
               <span>{item.title || item.name}</span>
-              <a
-                href={`https://www.netflix.com/search?q=${item.title || item.name}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="watch-link"
-              >
-                Watch on Netflix →
-              </a>
+              <div className="watchlist-providers">
+                {item.savedProviders?.length > 0 ? (
+                  item.savedProviders.map(p => (
+                    <a
+                      key={p.provider_id}
+                      href={STREAMING_LINKS[p.provider_name] ? STREAMING_LINKS[p.provider_name](item.title || item.name) : `https://www.justwatch.com/us/search?q=${encodeURIComponent(item.title || item.name)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="watch-link"
+                    >
+                      {STREAMING_LOGOS[p.provider_name] || '📺'} Watch on {p.provider_name} →
+                    </a>
+                  ))
+                ) : (
+                  <a
+                    href={`https://www.justwatch.com/us/search?q=${encodeURIComponent(item.title || item.name)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="watch-link"
+                  >
+                    🔍 Find where to watch →
+                  </a>
+                )}
+              </div>
             </div>
           ))}
         </div>

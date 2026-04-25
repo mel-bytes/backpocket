@@ -257,3 +257,15 @@ body {
   margin-bottom: 20px;
   font-size: 0.95rem;
 }
+
+.country-tag {
+  font-size: 0.85rem;
+  color: #e50914;
+  margin-top: 4px;
+}
+.watchlist-providers {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
