@@ -8,8 +8,9 @@ const STREAMING_LINKS = {
   'Disney Plus': (title) => `https://www.disneyplus.com/search/${encodeURIComponent(title)}`,
   'Disney+': (title) => `https://www.disneyplus.com/search/${encodeURIComponent(title)}`,
   'Hulu': (title) => `https://www.hulu.com/search?q=${encodeURIComponent(title)}&type=all`,
-  'Apple TV Plus': (title) => `https://tv.apple.com/search?term=${encodeURIComponent(title)}`,
-  'Apple TV+': (title) => `https://tv.apple.com/search?term=${encodeURIComponent(title)}`,
+  'Apple TV': (title) => `https://tv.apple.com/us/search?term=${encodeURIComponent(title)}`,
+  'Apple TV Plus': (title) => `https://tv.apple.com/us/search?term=${encodeURIComponent(title)}`,
+  'Apple TV+': (title) => `https://tv.apple.com/us/search?term=${encodeURIComponent(title)}`,
   'HBO Max': (title) => `https://play.max.com/search?q=${encodeURIComponent(title)}`,
   'Max': (title) => `https://play.max.com/search?q=${encodeURIComponent(title)}`,
   'Paramount Plus': (title) => `https://www.paramountplus.com/search/${encodeURIComponent(title)}/`,
@@ -20,6 +21,7 @@ const MAJOR_PLATFORMS = [
   'Netflix', 'Prime Video', 'Amazon Prime Video',
   'Disney+', 'Disney Plus',
   'Hulu',
+  'Apple TV',
   'Apple TV+', 'Apple TV Plus',
   'Max', 'HBO Max',
   'Paramount+', 'Paramount Plus'
@@ -151,7 +153,8 @@ function App() {
         const flatrate = provData.results?.[country]?.flatrate || [];
         const free = provData.results?.[country]?.free || [];
         const ads = provData.results?.[country]?.ads || [];
-        const allProviders = [...new Map([...flatrate, ...free, ...ads].map(p => [p.provider_id, p])).values()];;
+        const allProviders = [...new Map([...flatrate, ...free, ...ads].map(p => [p.provider_id, p])).values()];
+        console.log('ITEM:', item.id, '| COUNTRY:', country, '| PROVIDERS:', allProviders.map(p => p.provider_name));
         const countryProviders = allProviders.filter(p => MAJOR_PLATFORMS.includes(p.provider_name));
         providerMap[item.id] = countryProviders;
       })

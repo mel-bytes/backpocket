@@ -35,8 +35,32 @@ app.post('/detect', async (req, res) => {
     res.json({ title: detected });
 
   } catch (error) {
-    console.error('Detection error:', error);
-    res.status(500).json({ error: 'Detection failed' });
+    console.error('Streaming availability error:', error.message);
+    console.error('Full error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Route to get streaming availability from Movie of the Night
+app.get('/streaming', async (req, res) => {
+  const { title, country } = req.query;
+
+  try {
+    const response = await fetch(
+  `https://api.movieofthenight.com/v4/shows/search/title?title=${encodeURIComponent(title)}&country=${country}&series_granularity=show`,
+  {
+    headers: {
+      'X-API-Key': process.env.REACT_APP_MOVIENIGHT_KEY,
+    }
+  }
+);
+    const data = await response.json();
+    console.log('Movie of Night data:', JSON.stringify(data).slice(0, 500));
+    res.json(data);
+
+  } catch (error) {
+    console.error('Streaming availability error:', error);
+    res.status(500).json({ error: 'Failed to get streaming availability' });
   }
 });
 
