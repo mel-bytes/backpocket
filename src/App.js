@@ -119,7 +119,7 @@ function App() {
       Top Comments: ${topComments}
     `;
 
-    const aiResponse = await fetch('http://localhost:3001/detect', {
+    const aiResponse = await fetch('https://backpocket-production.up.railway.app/detect', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ videoInfo })
@@ -154,7 +154,6 @@ function App() {
         const free = provData.results?.[country]?.free || [];
         const ads = provData.results?.[country]?.ads || [];
         const allProviders = [...new Map([...flatrate, ...free, ...ads].map(p => [p.provider_id, p])).values()];
-        console.log('ITEM:', item.id, '| COUNTRY:', country, '| PROVIDERS:', allProviders.map(p => p.provider_name));
         const countryProviders = allProviders.filter(p => MAJOR_PLATFORMS.includes(p.provider_name));
         providerMap[item.id] = countryProviders;
       })
