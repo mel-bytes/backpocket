@@ -27,9 +27,28 @@ app.post('/detect', async (req, res) => {
         max_tokens: 100,
         messages: [{
           role: 'user',
-          content: `Based on this YouTube video information, what movie or TV show is being discussed or recommended? Reply with ONLY the title, nothing else. If you cannot identify one, reply with "NONE".
-          
-          ${videoInfo}`
+          content: `You are an expert at identifying movies and TV shows from social media content. Analyze this YouTube video information carefully and identify the movie or TV show being featured, discussed, or recommended.
+
+IMPORTANT: Pay special attention to the comments section — viewers frequently name the show or movie in comments, even with typos or informal spelling. Treat any commenter naming a title as strong evidence.
+
+Use ALL available signals:
+- Direct title mentions (even if misspelled — "chicagi fire" = "Chicago Fire")
+- Hashtags and keywords
+- Actor or character names mentioned
+- Plot or scene descriptions
+- Genre keywords (medical drama, true crime, courtroom, etc.)
+- Setting clues (hospital, courtroom, police station, etc.)
+- Comments where people ask "what show is this?" — replies often contain the answer
+- Comments where people name the show even casually
+- Production company or network mentions
+- Any partial title mentions
+
+Be aggressive in your inference — if the evidence strongly suggests a title, return it even if not explicitly stated.
+
+Reply with ONLY the title, nothing else. If you truly cannot identify one with reasonable confidence, reply with "Could not detect a movie or show from this video. Try another!".
+
+Video information:
+${videoInfo}`
         }]
       })
     });
