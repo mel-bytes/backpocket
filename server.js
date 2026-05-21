@@ -7,6 +7,9 @@ app.use(cors({
   origin: 'https://backpocket.up.railway.app'
 }));
 app.use(express.json());
+app.options('/detect', cors({
+  origin: 'https://backpocket.up.railway.app'
+}));
 
 app.post('/detect', async (req, res) => {
   const { videoInfo } = req.body;
