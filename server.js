@@ -3,7 +3,9 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'https://backpocket.up.railway.app'
+}));
 app.use(express.json());
 
 app.post('/detect', async (req, res) => {
