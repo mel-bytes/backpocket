@@ -98,7 +98,7 @@ function App() {
 
     const [ytResponse, commentsResponse] = await Promise.all([
       fetch(`https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet&key=${process.env.REACT_APP_YOUTUBE_KEY}`),
-      fetch(`https://www.googleapis.com/youtube/v3/commentThreads?videoId=${videoId}&part=snippet&maxResults=50&key=${process.env.REACT_APP_YOUTUBE_KEY}`)
+      fetch(`https://www.googleapis.com/youtube/v3/commentThreads?videoId=${videoId}&part=snippet&maxResults=500&key=${process.env.REACT_APP_YOUTUBE_KEY}`)
     ]);
 
     const ytData = await ytResponse.json();
