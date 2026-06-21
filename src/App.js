@@ -119,7 +119,7 @@ function App() {
       Top Comments: ${topComments}
     `;
 
-    const aiResponse = await fetch('https://backpocket-production.up.railway.app/detect', {
+    const aiResponse = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/detect`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ videoInfo })

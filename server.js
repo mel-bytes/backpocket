@@ -4,11 +4,11 @@ require('dotenv').config();
 
 const app = express();
 app.use(cors({
-  origin: 'https://backpocket.up.railway.app'
+  origin: ['https://backpocket.up.railway.app', 'http://localhost:3000', 'http://localhost:3002']
 }));
 app.use(express.json());
 app.options('/detect', cors({
-  origin: 'https://backpocket.up.railway.app'
+  origin: ['https://backpocket.up.railway.app', 'http://localhost:3000', 'http://localhost:3002']
 }));
 
 app.post('/detect', async (req, res) => {
@@ -23,7 +23,7 @@ app.post('/detect', async (req, res) => {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 100,
         messages: [{
           role: 'user',
@@ -43,7 +43,8 @@ Use ALL available signals:
 - Production company or network mentions
 - Any partial title mentions
 
-Be aggressive in your inference — if the evidence strongly suggests a title, return it even if not explicitly stated.
+Be aggressive in your inference — if the evidence strongly suggests a title, return it even if not explicitly stated. Output rules: Respond with ONLY the exact title and nothing else. No markdown, no headers, no confidence levels, no evidence, no explanation, no quotes, no year. Just the plain title text. Example correct response: Enough
+If you cannot identify it, respond with exactly: NONE
 
 Video information:
 ${videoInfo}`
@@ -52,6 +53,7 @@ ${videoInfo}`
     });
 
     const data = await response.json();
+    console.log('Anthropic response:', JSON.stringify(data));
     const detected = data.content[0].text.trim();
     res.json({ title: detected });
 
