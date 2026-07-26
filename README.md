@@ -1,70 +1,68 @@
-# Getting Started with Create React App
+🍿 BackPocket
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+See it. Pocket it. Watch it.
 
-## Available Scripts
+BackPocket closes the gap between discovering a movie or show on social media and actually finding it to watch. Paste a YouTube Shorts link, and AI detects the title, checks streaming availability in your country, and gets you one click away from watching.
 
-In the project directory, you can run:
+🔗 Live app: backpocket-app.vercel.app
 
-### `npm start`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 1. The Problem
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Streaming platforms users ( Netflix, Hulu, Disney , HBO , Apple TV e.tc.) discover shows and movies through social media - TikTok, Instagram Reels, Facebook via trending reviews, viral clips, and influencer recommendations.
 
-### `npm test`
+**BUT** the discovery-to-watching pipeline is broken:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Users forget the title by the time they open their streaming app
+- They have to manually search for it, leading to drop-offs
+- Many titles aren't available in their country  and they only find out AFTER switching apps
+- There is no seamless way to "pocket" something for later directly from social media
 
-### `npm run build`
+**This results in:**
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- Lost momentum from viral content
+- Missed viewing opportunities
+- Lower content engagement for streaming platforms
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 2. The Opportunity
 
-### `npm run eject`
+Social media is the #1 content discovery tool for streaming:  
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- 65% of viewers make viewing decisions based on social media trends  
+- 53% of younger generations ( Gex Z) prefer social media recommendations over algorithmic ones  
+- TikTok has 1B+ users; #Netflix has 80M+ posts on Instagram  
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+The gap: **there is no tool that seamlessly connects social media discovery to your streaming queue**
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+**BackPocket fixes that**
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+How It Works :  
+Discover — paste a YouTube Shorts URL  
+Detect — Claude AI identifies the movie or show from the video's title, description, tags, and comments (even with typos or indirect references)  
+Check — BackPocket looks up streaming availability by country  
+Save — add it to your personal watchlist  
+Watch — one click opens the right streaming platform, ready to search that title  
 
-## Learn More
+**Features**  
+🤖 AI-powered title detection from YouTube video metadata and comments  
+🌍 Automatic country detection with localized streaming availability  
+📺 Streaming provider logos and direct deep links (Netflix, Prime Video, Disney+, Hulu, Max, Apple TV+, Paramount+)  
+💾 Persistent personal watchlist  
+🔍 Manual search fallback for any movie or show  
+ 
+## Tech Stack
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+| Layer | Technology |
+| --- | --- |
+| Frontend | React |
+| Backend | Vercel Serverless Functions |
+| AI Detection | Anthropic Claude API |
+| Movie/Show Data | TMDB (The Movie Database) API |
+| Video Metadata | YouTube Data API |
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+**About This Project**
 
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+BackPocket was built as a hands-on way to apply AI development skills to a real, everyday problem: 
+the gap between discovering content on social media and actually watching it. It's a full-stack project covering AI integration, third-party API orchestration, and production deployment.
