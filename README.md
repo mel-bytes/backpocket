@@ -9,7 +9,7 @@ BackPocket closes the gap between discovering a movie or show on social media an
 
 ## 1. The Problem
 
-Streaming platforms users ( Netflix, Hulu, Disney , HBO , Apple TV e.tc.) discover shows and movies through social media - TikTok, Instagram Reels, Facebook via trending reviews, viral clips, and influencer recommendations.
+Streaming platforms users ( Netflix, Hulu, Disney+, HBO , Apple TV e.tc.) discover shows and movies through social media - TikTok, Instagram Reels,Youtube shorts, Facebook via trending reviews, viral clips, and influencer recommendations.
 
 **BUT** the discovery-to-watching pipeline is broken:
 
