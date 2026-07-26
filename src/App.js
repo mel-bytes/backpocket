@@ -119,7 +119,7 @@ function App() {
       Top Comments: ${topComments}
     `;
 
-    const aiResponse = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/detect`, {
+    const aiResponse = await fetch('/api/detect', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ videoInfo })
