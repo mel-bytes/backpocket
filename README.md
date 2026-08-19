@@ -26,7 +26,7 @@ Streaming platforms users ( Netflix, Hulu, Disney+, HBO , Apple TV e.tc.) discov
 
 ---
 
-## 2. The Opportunity
+## 2. Solution
 
 Social media is the #1 content discovery tool for streaming:  
 
